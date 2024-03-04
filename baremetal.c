@@ -1,5 +1,8 @@
 #include <stdint.h>
 
+#define F_CPU 8000000UL
+#define N_CYC 5
+
 #define RCC_BASE 0x40023800
 #define GPIOA_BASE 0x40020000
 
@@ -44,8 +47,16 @@
 #define ODR5 (1 << 5)
 /* 6...15 */
 
+static void waste(uint32_t secs);
 static void setup(void);
 static void loop(void);
+
+static void waste(uint32_t secs) {
+        uint32_t t, x;
+        for(t = 0; t < secs; t++) {
+                for(x = 0; x < F_CPU / N_CYC; x++) (void) 0;
+        }
+}
 
 static void setup(void) {
         /* Enable clock on PORT A */
@@ -59,16 +70,16 @@ static void setup(void) {
 
         /* Set PA5 to pull-down */
         GPIOA_PUPDR |= PUPDR5_PULLDOWN;
-
-        /* Set PA5 output to high */
-        GPIOA_ODR |= ODR5;
-
-        /* Get stuck here */
-        for(;;) (void)0;
 }
 
 static void loop(void) {
-        (void)0;
+        uint32_t x;
+
+        /* Toggle PA5 output */
+        GPIOA_ODR ^= ODR5;
+
+        /* Waste some time/energy */
+        waste(1);
 }
 
 int main(void) {
