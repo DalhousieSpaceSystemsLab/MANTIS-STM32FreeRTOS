@@ -37,7 +37,10 @@ static void setup(void);
 static void loop(void);
 
 static void setup(void) {
+        RCC_AHB1ENR &= ~(3);
         RCC_AHB1ENR |= GPIOAEN;
+
+        DDRA &= ~(LED_PIN);
         DDRA |= LED_PIN;
 }
 
@@ -45,9 +48,9 @@ static void loop(void) {
         size_t x;
 
         PORTA |= LED_PIN;
-        for(x = 0; x < F_CPU; x++);
+        for(x = 0; x < 99999; x++);
         PORTA &= ~(LED_PIN);
-        for(x = 0; x < F_CPU; x++);
+        for(x = 0; x < 99999; x++);
 }
 
 int main(void) {
