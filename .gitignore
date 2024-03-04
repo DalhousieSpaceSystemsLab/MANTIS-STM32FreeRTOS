@@ -3,3 +3,4 @@
 /baremetal.elf
 /baremetal.elf.map
 /crt.o
+/baremetal.o
