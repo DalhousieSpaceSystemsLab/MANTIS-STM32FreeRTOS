@@ -11,7 +11,7 @@ baremetal.o: baremetal.c
 	$(CC) $(CFLAGS) -c -o baremetal.o baremetal.c
 
 baremetal.elf: linker.ld baremetal.o
-	$(LD) $(LDFLAGS) -o baremetal.elf baremetal.o
+	$(LD) -T linker.ld -o baremetal.elf baremetal.o
 
 baremetal.bin: baremetal.elf
 	$(BIN) -O binary baremetal.elf baremetal.bin 
