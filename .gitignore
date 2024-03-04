@@ -1,1 +1,4 @@
 *.swp
+/baremetal.bin
+/baremetal.elf
+/baremetal.elf.map
