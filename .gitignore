@@ -2,3 +2,4 @@
 /baremetal.bin
 /baremetal.elf
 /baremetal.elf.map
+/crt.o
