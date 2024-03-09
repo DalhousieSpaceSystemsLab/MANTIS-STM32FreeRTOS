@@ -73,8 +73,6 @@ static void setup(void) {
 }
 
 static void loop(void) {
-        uint32_t x;
-
         /* Toggle PA5 output */
         GPIOA_ODR ^= ODR5;
 
