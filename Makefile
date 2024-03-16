@@ -17,7 +17,7 @@ baremetal_CPPFLAGS :=
 baremetal_LDFLAGS := -L$(BUILD_DIR) 
 
 
-all: $(BUILD_DIR)/flashtarget.bin
+all: flashtarget
 
 $(BUILD_DIR)/crt.o: crt.s | $(BUILD_DIR)
 	$(AS) -o $(BUILD_DIR)/crt.o crt.s
@@ -37,10 +37,12 @@ $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 flash: $(BUILD_DIR)/flashtarget.bin
 	$(STL) write $< 0x8000000
 
+flashtarget: $(BUILD_DIR)/flashtarget.bin
+
 $(BUILD_DIR):
 	@mkdir -pv $@
 
 clean:
 	@rm -rvf *.o *.elf *.bin $(BUILD_DIR)
 
-.PHONY: all flash clean
+.PHONY: all flash clean flashtarget
