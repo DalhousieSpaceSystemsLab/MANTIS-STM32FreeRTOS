@@ -1,0 +1,46 @@
+CC = arm-none-eabi-gcc
+AS = arm-none-eabi-as
+LD = arm-none-eabi-ld
+BIN = arm-none-eabi-objcopy
+STL = st-flash
+
+CFLAGS = -mthumb -mcpu=cortex-m4
+
+BUILD_DIR = build
+
+{% for target in project.targets %}
+{{ target.clean_name() }}_SRC := {% for src in target.sources() %}{{ src }} {% endfor %}
+{{ target.clean_name() }}_OBJ := $(patsubst %,$(BUILD_DIR)/%.o,$({{ target.clean_name() }}_SRC))
+{{ target.clean_name() }}_INC := {% for inc_dir in target.include_dirs(ignore_deps=False) %}{{ inc_dir }} {% endfor %}
+{{ target.clean_name() }}_LIB := {% for dep in target.depends() %}{{ dep }} {% endfor %}
+{{ target.clean_name() }}_CPPFLAGS := {% for inc_dir in target.include_dirs(ignore_deps=False) %}-I{{ inc_dir }} {% endfor %}
+{{ target.clean_name() }}_LDFLAGS := -L$(BUILD_DIR) {% for dep in target.depends() %}-l{{ dep }} {% endfor %}
+{% endfor %}
+
+all: $(BUILD_DIR)/flashtarget.bin
+
+$(BUILD_DIR)/crt.o: crt.s | $(BUILD_DIR)
+	$(AS) -o $(BUILD_DIR)/crt.o crt.s
+
+$(BUILD_DIR)/%.c.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+{% for target in project.targets %}
+$(BUILD_DIR)/%.elf: linker.ld $(BUILD_DIR)/crt.o $({{ target.clean_name() }}_OBJ) | $(BUILD_DIR)
+	$(LD) -T linker.ld -o $@ $(BUILD_DIR)/crt.o $({{ target.clean_name() }}_OBJ)
+{% endfor %}
+
+$(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
+	$(BIN) -O binary $< $@ 
+
+flash: $(BUILD_DIR)/flashtarget.bin
+	$(STL) write $< 0x8000000
+
+$(BUILD_DIR):
+	@mkdir -pv $@
+
+clean:
+	@rm -rvf *.o *.elf *.bin $(BUILD_DIR)
+
+.PHONY: all flash clean

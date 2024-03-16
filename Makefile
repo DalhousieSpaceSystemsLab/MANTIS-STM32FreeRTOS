@@ -6,24 +6,41 @@ STL = st-flash
 
 CFLAGS = -mthumb -mcpu=cortex-m4
 
-all: baremetal.bin
+BUILD_DIR = build
 
-crt.o: crt.s
-	$(AS) -o crt.o crt.s
 
-baremetal.o: baremetal.c
-	$(CC) $(CFLAGS) -c -o baremetal.o baremetal.c
+baremetal_SRC := baremetal.c 
+baremetal_OBJ := $(patsubst %,$(BUILD_DIR)/%.o,$(baremetal_SRC))
+baremetal_INC := 
+baremetal_LIB := 
+baremetal_CPPFLAGS := 
+baremetal_LDFLAGS := -L$(BUILD_DIR) 
 
-baremetal.elf: linker.ld crt.o baremetal.o
-	$(LD) -T linker.ld -o baremetal.elf crt.o baremetal.o
 
-baremetal.bin: baremetal.elf
-	$(BIN) -O binary baremetal.elf baremetal.bin 
+all: $(BUILD_DIR)/flashtarget.bin
 
-flash: baremetal.bin
-	$(STL) write baremetal.bin 0x8000000
+$(BUILD_DIR)/crt.o: crt.s | $(BUILD_DIR)
+	$(AS) -o $(BUILD_DIR)/crt.o crt.s
+
+$(BUILD_DIR)/%.c.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+
+$(BUILD_DIR)/%.elf: linker.ld $(BUILD_DIR)/crt.o $(baremetal_OBJ) | $(BUILD_DIR)
+	$(LD) -T linker.ld -o $@ $(BUILD_DIR)/crt.o $(baremetal_OBJ)
+
+
+$(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
+	$(BIN) -O binary $< $@ 
+
+flash: $(BUILD_DIR)/flashtarget.bin
+	$(STL) write $< 0x8000000
+
+$(BUILD_DIR):
+	@mkdir -pv $@
 
 clean:
-	@rm -vf *.o *.elf *.bin 
+	@rm -rvf *.o *.elf *.bin $(BUILD_DIR)
 
 .PHONY: all flash clean
